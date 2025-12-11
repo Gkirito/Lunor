@@ -1,0 +1,29 @@
+{
+  "name": "lunor",
+  "version": "0.1.0",
+  "description": "Polkadot AssetHub analytics stack (Subsquid + Postgres + Superset)",
+  "private": true,
+  "workspaces": [
+    "indexers/*"
+  ],
+  "scripts": {
+    "db:up": "docker-compose up -d postgres",
+    "db:down": "docker-compose down",
+    "superset:up": "docker-compose up -d superset",
+    "dev:assethub": "cd indexers/assethub && sqd process",
+    "build:assethub": "cd indexers/assethub && sqd build"
+  },
+  "keywords": [
+    "polkadot",
+    "substrate",
+    "blockchain",
+    "analytics",
+    "dune",
+    "subsquid"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@polkadot/api": "^16.5.3"
+  }
+}

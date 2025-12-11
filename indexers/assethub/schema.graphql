@@ -1,0 +1,253 @@
+# AssetHub Data Schema
+# Following Dune Analytics Substrate table structure
+
+# ============= Core Tables =============
+
+type Block @entity {
+  "Block hash"
+  id: ID!
+  "Block number"
+  number: Int! @index
+  "Block timestamp"
+  blockTime: DateTime! @index
+  "Parent block hash"
+  parentHash: String!
+  "State root"
+  stateRoot: String
+  "Extrinsics root"
+  extrinsicsRoot: String
+  "Block author (validator) SS58"
+  authorSs58: String @index
+  "Number of extrinsics in block"
+  extrinsicsCount: Int!
+  "Number of events in block"
+  eventsCount: Int!
+
+  "Relationships"
+  events: [Event!] @derivedFrom(field: "block")
+  calls: [Call!] @derivedFrom(field: "block")
+}
+
+type Event @entity {
+  "Unique event ID: blockNumber-eventIdx"
+  id: ID!
+  "Block number"
+  blockNumber: Int! @index
+  "Block timestamp"
+  blockTime: DateTime! @index
+  "Event index within block"
+  eventIdx: Int!
+  "Extrinsic hash (if event from extrinsic)"
+  extrinsicHash: String @index
+  "Pallet name (section)"
+  section: String! @index
+  "Method name"
+  method: String! @index
+  "Event data (JSON)"
+  data: String
+
+  "Relationships"
+  block: Block!
+}
+
+type Call @entity {
+  "Unique call ID: blockNumber-extrinsicIdx-callIdx"
+  id: ID!
+  "Block number"
+  blockNumber: Int! @index
+  "Block timestamp"
+  blockTime: DateTime! @index
+  "Extrinsic index"
+  extrinsicIdx: Int!
+  "Call index within extrinsic"
+  callIdx: Int!
+  "Extrinsic hash"
+  extrinsicHash: String @index
+  "Pallet name"
+  callSection: String! @index
+  "Method name"
+  callMethod: String! @index
+  "Signer address (SS58)"
+  signerSs58: String @index
+  "Call success status"
+  success: Boolean! @index
+  "Call arguments (JSON)"
+  args: String
+
+  "Relationships"
+  block: Block!
+}
+
+type Transfer @entity {
+  "Unique transfer ID: blockNumber-eventIdx"
+  id: ID!
+  "Block number"
+  blockNumber: Int! @index
+  "Block timestamp"
+  blockTime: DateTime! @index
+  "Block hash"
+  blockHash: String @index
+  "Extrinsic id block-extrinsicIdx"
+  extrinsicId: String @index
+  "Extrinsic hash"
+  extrinsicHash: String @index
+  "From address (SS58)"
+  fromSs58: String! @index
+  "From public key (hex)"
+  fromPubkey: String @index
+  "To address (SS58)"
+  toSs58: String! @index
+  "To public key (hex)"
+  toPubkey: String @index
+  "Transfer amount (raw)"
+  amount: BigInt! @index
+  "Asset ID (null for native DOT)"
+  assetId: String @index
+  "Asset symbol if known"
+  symbol: String @index
+  "Asset decimals if known"
+  decimals: Int
+  "Transfer success"
+  success: Boolean!
+  "Transfer type (native/asset)"
+  transferType: String! @index
+}
+
+"Extrinsics table (one per extrinsic)"
+type Extrinsic @entity {
+  "Extrinsic hash"
+  id: ID!
+  "Block number"
+  blockNumber: Int! @index
+  "Block timestamp"
+  blockTime: DateTime! @index
+  "Block hash"
+  blockHash: String @index
+  "Extrinsic index in block"
+  extrinsicIdx: Int! @index
+  "Section/pallet"
+  section: String @index
+  "Method"
+  method: String @index
+  "Signer address (SS58)"
+  signerSs58: String @index
+  "Signer public key (hex)"
+  signerPubkey: String @index
+  "Success flag"
+  success: Boolean! @index
+  "Fee in planck"
+  fee: BigInt
+  "Arguments (JSON)"
+  args: String
+}
+
+type DailyStat @entity {
+  "Date in YYYY-MM-DD format"
+  id: ID!
+  "Date"
+  date: DateTime! @index
+  "Number of blocks"
+  blocksCount: Int!
+  "Number of transfers"
+  transfersCount: Int!
+  "Total transfer volume (DOT only)"
+  transfersVolume: BigInt!
+  "Number of active accounts"
+  activeAccounts: Int!
+  "Number of new accounts"
+  newAccounts: Int!
+}
+
+# ============= AssetHub Specific Tables =============
+
+type Asset @entity {
+  "Asset ID"
+  id: ID!
+  "Asset name"
+  name: String
+  "Asset symbol"
+  symbol: String
+  "Asset decimals"
+  decimals: Int!
+  "Asset owner"
+  owner: String!
+  "Total supply"
+  supply: BigInt!
+  "Number of holders"
+  holders: Int!
+  "Is sufficient asset"
+  isSufficient: Boolean!
+  "Creation timestamp"
+  createdAt: DateTime! @index
+  "Creation block number"
+  createdAtBlock: Int! @index
+
+  "Relationships"
+  transfers: [AssetTransfer!] @derivedFrom(field: "asset")
+}
+
+type AssetTransfer @entity {
+  "Unique transfer ID: blockNumber-eventIdx"
+  id: ID!
+  "Block number"
+  blockNumber: Int! @index
+  "Block timestamp"
+  blockTime: DateTime! @index
+  "Extrinsic hash"
+  extrinsicHash: String @index
+  "Asset ID"
+  assetId: String! @index
+  "From address (SS58)"
+  fromSs58: String! @index
+  "To address (SS58)"
+  toSs58: String! @index
+  "Transfer amount"
+  amount: BigInt! @index
+
+  "Relationships"
+  asset: Asset!
+}
+
+type Account @entity {
+  "Account address (SS58)"
+  id: ID!
+  "First seen block"
+  firstSeenBlock: Int!
+  "First seen timestamp"
+  firstSeenAt: DateTime!
+  "Last active block"
+  lastActiveBlock: Int!
+  "Last active timestamp"
+  lastActiveAt: DateTime!
+  "Total transactions count"
+  txCount: Int!
+}
+
+type Balance @entity {
+  "assetId-addressSs58"
+  id: ID!
+  "Asset ID"
+  assetId: String! @index
+  "Account address (SS58)"
+  addressSs58: String! @index
+  "Account public key (hex)"
+  addressPubkey: String! @index
+  "Asset symbol (USDT/USDC/etc)"
+  symbol: String! @index
+  "Free balance"
+  free: BigInt!
+  "Reserved balance"
+  reserved: BigInt!
+  "Misc frozen balance"
+  miscFrozen: BigInt
+  "Frozen balance"
+  frozen: BigInt
+  "Account nonce"
+  nonce: Int
+  "Total balance (free + reserved)"
+  total: BigInt!
+  "Last updated timestamp"
+  ts: DateTime! @index
+  "Last updated block"
+  updatedAtBlock: Int!
+}

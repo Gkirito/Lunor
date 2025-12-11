@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lunor-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lunolens
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lunor
+
+  superset:
+    build:
+      context: ./superset
+    container_name: lunor-superset
+    environment:
+      SUPERSET_SECRET_KEY: 'change-this-to-a-long-random-string'
+      SUPERSET_LOAD_EXAMPLES: 'no'
+      SQLALCHEMY_DATABASE_URI: 'sqlite:////app/superset_home/superset.db'
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./superset/data:/app/superset_home
+      - ./superset/init-superset.sh:/app/init-superset.sh
+      - ./superset/setup-database.py:/app/setup-database.py
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lunor
+    command: ["/bin/bash", "/app/init-superset.sh"]
+
+networks:
+  lunor:
+    driver: bridge
