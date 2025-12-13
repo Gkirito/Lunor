@@ -22,8 +22,7 @@ services:
       - lunor
 
   superset:
-    build:
-      context: ./superset
+    image: apache/superset:6.0.0rc2
     container_name: lunor-superset
     environment:
       SUPERSET_SECRET_KEY: 'change-this-to-a-long-random-string'
@@ -37,6 +36,8 @@ services:
       - ./superset/init-superset.sh:/app/init-superset.sh
       - ./superset/setup-database.py:/app/setup-database.py
       - ./superset/superset_config.py:/app/pythonpath/superset_config.py
+      - ./superset/Polkadot_Logo_Pink-Black.svg:/app/superset/static/assets/images/polkadot-logo.svg
+      - ./superset/Polkadot_Token_Pink.svg:/app/superset/static/assets/images/polka-favicon.svg
     depends_on:
       postgres:
         condition: service_healthy

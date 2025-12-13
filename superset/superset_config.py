@@ -56,16 +56,29 @@ CSV_EXPORT = {
 APP_NAME = "Lunor"
 # Custom logo (we copy this file into the static assets during build/init)
 APP_ICON = "/static/assets/images/polkadot-logo.svg"
-FAVICON = "/static/assets/images/polkadot-logo.svg"
+FAVICON = "/static/assets/images/polkadot-favicon.svg"
+FAVICONS = [
+    {"href": "/static/assets/images/polkadot-favicon.svg"},
+]
 
 # Language options (enable language selection in preferences)
 BABEL_DEFAULT_LOCALE = "en"
-LANGUAGES = {
-    "en": {"flag": "us", "name": "English"},
-    "zh": {"flag": "cn", "name": "中文"},
-    "es": {"flag": "es", "name": "Español"},
-    "fr": {"flag": "fr", "name": "Français"},
-    "de": {"flag": "de", "name": "Deutsch"},
-    "ja": {"flag": "jp", "name": "日本語"},
+
+
+# Disable UI theme administration to force config-defined theme only
+ENABLE_UI_THEME_ADMINISTRATION = False
+# Default (light) theme tokens
+THEME_DEFAULT = {
+    "token": {
+        "colorPrimary": "#ff2670",
+        "colorInfo": "#ff2670",
+        "colorLink": "#ff2670",
+        "borderRadius": 8,
+        "brandLogoAlt": "Lunor",
+        "brandLogoUrl": APP_ICON,
+    },
+     "algorithm": "default",
 }
 
+# Force single theme (no dark variant)
+THEME_DARK = None

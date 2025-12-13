@@ -4,9 +4,13 @@
 echo "⏳ Waiting for PostgreSQL to be ready..."
 sleep 5
 
-# Ensure dependencies are available
-echo "📦 Installing required Python packages (flask-cors, psycopg2-binary)..."
-pip install --quiet flask-cors psycopg2-binary >/dev/null 2>&1 || true
+# Ensure psycopg2 is available in the Superset virtualenv (needed for Postgres connections)
+echo "📦 Ensuring psycopg2-binary is installed..."
+if [ -x /app/.venv/bin/pip3 ]; then
+    /app/.venv/bin/pip3 install --no-cache-dir psycopg2-binary >/dev/null 2>&1 || true
+else
+    pip install --quiet psycopg2-binary >/dev/null 2>&1 || true
+fi
 
 # Initialize Superset database
 echo "📦 Initializing Superset database..."
@@ -25,10 +29,6 @@ superset fab create-admin \
 echo "🔧 Initializing Superset roles and permissions..."
 superset init
 
-# Copy custom logo into static assets for branding (keeps build-time copy fresh)
-if [ -f /app/superset_home/assets/images/polkadot-logo.svg ]; then
-    cp /app/superset_home/assets/images/polkadot-logo.svg /app/superset/static/assets/images/polkadot-logo.svg || true
-fi
 
 # Setup database connections using superset shell
 echo "🔌 Setting up database connections..."

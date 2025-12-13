@@ -1,0 +1,45 @@
+<script nonce="{{ csp_nonce() }}">
+(() => {
+  const replacements = {
+    Database: "Blockchains",
+    Databases: "Blockchains",
+    "Database:": "Blockchains",
+    DATABASE: "Blockchains",
+  };
+
+  const replaceNodeText = (el) => {
+    if (!el || !el.textContent) return;
+    const trimmed = el.textContent.trim();
+    if (replacements[trimmed]) {
+      el.textContent = el.textContent.replace(trimmed, replacements[trimmed]);
+    }
+  };
+
+  const apply = () => {
+    document
+      .querySelectorAll("label, th, span, div, button")
+      .forEach((el) => replaceNodeText(el));
+
+    document.querySelectorAll("[aria-label]").forEach((el) => {
+      const aria = el.getAttribute("aria-label");
+      if (replacements[aria]) el.setAttribute("aria-label", replacements[aria]);
+    });
+
+    document
+      .querySelectorAll("input[placeholder], textarea[placeholder]")
+      .forEach((el) => {
+        const ph = el.getAttribute("placeholder");
+        if (replacements[ph]) el.setAttribute("placeholder", replacements[ph]);
+      });
+  };
+
+  const observer = new MutationObserver(apply);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", apply, { once: true });
+  } else {
+    apply();
+  }
+})();
+</script>
