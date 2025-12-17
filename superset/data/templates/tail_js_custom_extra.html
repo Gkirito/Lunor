@@ -1,0 +1,119 @@
+<script nonce="{{ csp_nonce() }}">
+/**
+ * Custom tail JS injected via /app/superset_home/templates/tail_js_custom_extra.html
+ *
+ * What it does:
+ * 1) Text replacement: rename "Database" variants to "Blockchains" in visible text, aria-label, placeholder.
+ * 2) Dataset list filters: on /tablemodelview/list/ hide every filter control except the first (Name)
+ *    by injecting a small CSS rule. Uses MutationObserver so it survives React re-renders.
+ *
+ * How to disable:
+ * - Remove or edit entries in the replacements map.
+ * - Remove the CSS injection block in hideOtherDatasetFilters().
+ *
+ * Why CSS (vs direct DOM removal):
+ * - Superset renders filter controls dynamically; a :not(:first-child) rule is more robust to DOM changes.
+ */
+(() => {
+  // Debug flag: set to true to log actions in browser console
+  const DEBUG = true;
+
+  // Text replacements (case-sensitive keys)
+  const replacements = {
+    // Database: "Blockchains",
+    // Databases: "Blockchains",
+    // "Database:": "Blockchains",
+    // DATABASE: "Blockchains",
+  };
+
+  const replaceNodeText = (el) => {
+    if (!el || !el.textContent) return;
+    const trimmed = el.textContent.trim();
+    if (replacements[trimmed]) {
+      el.textContent = el.textContent.replace(trimmed, replacements[trimmed]);
+    }
+  };
+
+  // Apply replacements across common text/aria/placeholder nodes
+  const applyReplacements = () => {
+    document
+      .querySelectorAll("label, th, span, div, button")
+      .forEach((el) => replaceNodeText(el));
+
+    document.querySelectorAll("[aria-label]").forEach((el) => {
+      const aria = el.getAttribute("aria-label");
+      if (replacements[aria]) el.setAttribute("aria-label", replacements[aria]);
+    });
+
+    document
+      .querySelectorAll("input[placeholder], textarea[placeholder]")
+      .forEach((el) => {
+        const ph = el.getAttribute("placeholder");
+        if (replacements[ph]) el.setAttribute("placeholder", replacements[ph]);
+      });
+  };
+
+  const replaceObserver = new MutationObserver(applyReplacements);
+  replaceObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyReplacements, { once: true });
+  } else {
+    applyReplacements();
+  }
+
+  // Hide all dataset filters except the first (Name) on the datasets list page
+  const hideOtherDatasetFilters = () => {
+    if (!location.pathname.includes("/tablemodelview/list/")) return;
+    const row =
+      document.querySelector('[data-test="filters-row"]') ||
+      document.querySelector(".superset-list-view.dataset-list-view .controls") ||
+      document.querySelector(".controls");
+
+    if (!row) {
+      if (DEBUG) console.log("[tail_js] filters row not found yet");
+      return;
+    }
+    // Inject CSS once to hide siblings after the first filter control
+    if (!document.getElementById("dataset-filter-hide-style")) {
+      const style = document.createElement("style");
+      style.id = "dataset-filter-hide-style";
+      style.innerHTML = `
+        .superset-list-view.dataset-list-view .controls > *:not(:first-child),
+        [data-test="filters-row"] > *:not(:first-child) {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+      if (DEBUG) console.log("[tail_js] injected filter hide style");
+    }
+    if (DEBUG) console.log("[tail_js] hid filters via CSS");
+  };
+
+  // Hide last two filters on the dashboards list page (keep Name/Status/Owner/Favorite)
+  const hideDashboardLastFilters = () => {
+    if (!location.pathname.includes("/dashboard/list/")) return;
+    // Inject CSS to hide the last two filter controls in the row
+    if (!document.getElementById("dashboard-filter-hide-style")) {
+      const style = document.createElement("style");
+      style.id = "dashboard-filter-hide-style";
+      style.innerHTML = `
+        .superset-list-view.dashboard-list-view .controls > *:nth-last-child(-n+2),
+        [data-test="filters-row"] > *:nth-last-child(-n+2) {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+      if (DEBUG) console.log("[tail_js] injected dashboard filter hide style");
+    }
+    if (DEBUG) console.log("[tail_js] hid dashboard last filters via CSS");
+  };
+
+  const filterObs = new MutationObserver(hideOtherDatasetFilters);
+  filterObs.observe(document.body, { childList: true, subtree: true });
+  hideOtherDatasetFilters();
+  hideDashboardLastFilters();
+
+  if (DEBUG) console.log("[tail_js] custom script loaded");
+})();
+</script>

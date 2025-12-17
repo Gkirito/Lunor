@@ -36,8 +36,9 @@ services:
       - ./superset/init-superset.sh:/app/init-superset.sh
       - ./superset/setup-database.py:/app/setup-database.py
       - ./superset/superset_config.py:/app/pythonpath/superset_config.py
-      - ./superset/Polkadot_Logo_Pink-Black.svg:/app/superset/static/assets/images/polkadot-logo.svg
-      - ./superset/Polkadot_Token_Pink.svg:/app/superset/static/assets/images/polka-favicon.svg
+      - ./superset/data/assets/images/lunor_logo.svg:/app/superset/static/assets/images/lunor_logo.svg
+      - ./superset/data/assets/images/favicon.svg:/app/superset/static/assets/images/favicon.svg
+      - ./superset/data/templates/tail_js_custom_extra.html:/app/superset/templates/tail_js_custom_extra.html
     depends_on:
       postgres:
         condition: service_healthy

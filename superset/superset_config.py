@@ -55,11 +55,9 @@ CSV_EXPORT = {
 # Branding
 APP_NAME = "Lunor"
 # Custom logo (we copy this file into the static assets during build/init)
-APP_ICON = "/static/assets/images/polkadot-logo.svg"
-FAVICON = "/static/assets/images/polkadot-favicon.svg"
-FAVICONS = [
-    {"href": "/static/assets/images/polkadot-favicon.svg"},
-]
+APP_ICON = "/static/assets/images/lunor_logo.svg"
+FAVICON = "/static/assets/images/favicon.svg"
+FAVICONS = [{"href": FAVICON}]
 
 # Language options (enable language selection in preferences)
 BABEL_DEFAULT_LOCALE = "en"
