@@ -8,6 +8,8 @@ from superset import db
 from superset.models.core import Database
 import json
 import logging
+import os
+from urllib.parse import urlencode, quote_plus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,10 +23,28 @@ def setup_database_connections():
     ).first()
 
     if not assethub_db:
+        db_user = os.environ.get("DB_USER", "postgres")
+        db_pass = os.environ.get("DB_PASS", "")
+        db_host = os.environ.get("DB_HOST", "127.0.0.1")
+        db_port = os.environ.get("DB_PORT", "5432")
+        db_name = os.environ.get("DB_NAME", "lunolens")
+        db_ssl = os.environ.get("DB_SSL", "false").lower() == "true"
+        db_ssl_reject = os.environ.get("DB_SSL_REJECT_UNAUTHORIZED", "true").lower() == "true"
+
+        query_params = {"options": "-c search_path=assethub"}
+        if db_ssl:
+            query_params["sslmode"] = "verify-full" if db_ssl_reject else "require"
+
+        query_string = urlencode(query_params)
+        sqlalchemy_uri = (
+            f"postgresql://{quote_plus(db_user)}:{quote_plus(db_pass)}"
+            f"@{db_host}:{db_port}/{db_name}?{query_string}"
+        )
+
         logger.info("Creating AssetHub database connection...")
         assethub_db = Database(
             database_name='AssetHub',
-            sqlalchemy_uri='postgresql://postgres:postgres@postgres:5432/lunolens?options=-csearch_path%3Dassethub',
+            sqlalchemy_uri=sqlalchemy_uri,
             expose_in_sqllab=True,
             allow_run_async=True,
             allow_ctas=True,
