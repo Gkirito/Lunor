@@ -1,12 +1,17 @@
 # Superset Configuration
 
 import os
+from pathlib import Path
+from flask_appbuilder.security.manager import AUTH_DB, AUTH_OAUTH
 
 # Security
 SECRET_KEY = os.environ.get('SUPERSET_SECRET_KEY', 'change-this-to-a-long-random-string')
 
-# Database connection for Superset metadata (use the bundled SQLite so existing dashboards are preserved)
-SQLALCHEMY_DATABASE_URI = 'sqlite:////app/superset_home/superset.db'
+# Database connection for Superset metadata (use sqlite file directly under superset/data)
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_AUTO_RELOAD = True
+SUPERSET_TEMPLATE_OVERRIDE_DIR = BASE_DIR / "data" / "templates"
+SQLALCHEMY_DATABASE_URI = f"sqlite:///{(BASE_DIR / 'data' / 'superset.db')}"
 
 # Public access settings (for MVP - no authentication required)
 PUBLIC_ROLE_LIKE = 'Gamma'
@@ -62,6 +67,35 @@ FAVICONS = [{"href": FAVICON}]
 # Language options (enable language selection in preferences)
 BABEL_DEFAULT_LOCALE = "en"
 
+# Google OAuth login (values taken from environment so secrets stay out of git)
+AUTH_TYPE = AUTH_DB
+AUTH_USER_REGISTRATION = False
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
+
+if GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET:
+    AUTH_TYPE = AUTH_OAUTH
+    AUTH_USER_REGISTRATION = True
+    AUTH_USER_REGISTRATION_ROLE = "Gamma"
+    OAUTH_PROVIDERS = [
+        {
+            "name": "google",
+            "icon": "fa-google",
+            "token_key": "access_token",
+            "remote_app": {
+                "client_id": GOOGLE_OAUTH_CLIENT_ID,
+                "client_secret": GOOGLE_OAUTH_CLIENT_SECRET,
+                "api_base_url": "https://www.googleapis.com/oauth2/v2/",
+                "server_metadata_url": "https://accounts.google.com/.well-known/openid-configuration",
+                "client_kwargs": {
+                    "scope": "openid email profile",
+                    "access_type": "offline",
+                },
+                "authorize_url": "https://accounts.google.com/o/oauth2/auth",
+                "access_token_url": "https://oauth2.googleapis.com/token",
+            },
+        }
+    ]
 
 # Disable UI theme administration to force config-defined theme only
 ENABLE_UI_THEME_ADMINISTRATION = False
