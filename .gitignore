@@ -39,3 +39,19 @@ docker-compose.override.yml
 # Build output
 dist/
 build/
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+!*.code-workspace
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+.claude
+
+superset/data/.cache
+superset/data/.local
